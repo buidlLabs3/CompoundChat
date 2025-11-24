@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node-20+-green)](https://nodejs.org/)
+[![Ethereum](https://img.shields.io/badge/Ethereum-Mainnet-purple)](https://ethereum.org/)
 
 ## 🎯 Mission
 
