@@ -1,0 +1,496 @@
+# CompoundChat - Cursor Rules
+
+## Project Overview
+CompoundChat is a WhatsApp bot that brings Compound DeFi protocols to 2+ billion messaging users, focusing on African mobile-first markets. This is a mission-critical financial application requiring the highest standards of security, privacy, and user experience.
+
+## Core Architecture Principles
+
+### 1. Security First
+- **Non-custodial design**: Users always control their private keys
+- **Defense in depth**: Multiple layers of security at every level
+- **Zero trust architecture**: Verify everything, assume nothing
+- **Minimal attack surface**: Reduce exposed endpoints and complexity
+- **Fail secure**: All error paths must default to safe states
+- **Audit-ready code**: Every security-critical function must be thoroughly documented
+
+### 2. Privacy by Design
+- **End-to-end encryption**: All sensitive data encrypted at rest and in transit
+- **Zero-knowledge proofs**: Minimize data exposure in transaction verification
+- **Data minimization**: Only collect and store what's absolutely necessary
+- **User sovereignty**: Users own and control their data
+- **No tracking**: No analytics that compromise user privacy
+
+### 3. African Market Optimization
+- **Low bandwidth**: Optimize for 2G/3G connections
+- **Offline resilience**: Graceful degradation when connectivity drops
+- **SMS fallback**: Critical operations must work via SMS
+- **Mobile-first**: Every feature designed for basic smartphones
+- **Cost conscious**: Minimize data usage to reduce user costs
+- **Local currency support**: Seamless integration with mobile money
+
+### 4. Code Quality Standards
+- **Type safety**: Strict TypeScript with no `any` types
+- **Comprehensive testing**: Unit, integration, and E2E tests for all critical paths
+- **Immutability**: Prefer immutable data structures
+- **Error handling**: Never use bare `try-catch`; always handle specific error types
+- **Documentation**: Every public function/class must have JSDoc
+- **Code reviews**: All security-critical code requires peer review
+
+## Technology Stack
+
+### Backend
+- **Runtime**: Node.js 20+ LTS
+- **Language**: TypeScript 5+ (strict mode enabled)
+- **Framework**: Express.js for webhook server
+- **Database**: PostgreSQL 15+ for user data, Redis for session management
+- **Cryptography**: 
+  - `ethers.js` v6 for Ethereum interactions
+  - `tweetnacl` for encryption
+  - `bip39` for mnemonic generation
+  - Custom ZK implementation using `snarkjs`
+
+### Messaging Platform
+- **Primary**: WhatsApp Business API
+- **Fallback**: SMS via Twilio/Africa's Talking
+- **Library**: `whatsapp-web.js` or official Business API client
+
+### Blockchain
+- **Network**: Ethereum mainnet (production), Sepolia (testing)
+- **Protocol**: Compound V3 (Comet)
+- **RPC**: Alchemy/Infura with fallback providers
+- **Wallet**: ethers.js Wallet with HD derivation
+
+### Infrastructure
+- **Hosting**: AWS/DigitalOcean with African data center presence
+- **Webhooks**: ngrok (dev), AWS Lambda + API Gateway (prod)
+- **Monitoring**: Prometheus + Grafana
+- **Logging**: Winston with structured logging
+- **Secret management**: AWS Secrets Manager or HashiCorp Vault
+
+## Project Structure
+
+```
+CompoundChat/
+├── src/
+│   ├── bot/                    # WhatsApp bot logic
+│   │   ├── handlers/           # Command handlers (balance, supply, withdraw, etc.)
+│   │   ├── middleware/         # Message processing middleware
+│   │   └── index.ts
+│   ├── wallet/                 # Non-custodial wallet management
+│   │   ├── creation.ts         # Wallet creation & key derivation
+│   │   ├── encryption.ts       # Key encryption & storage
+│   │   ├── recovery.ts         # Seed phrase recovery
+│   │   └── signer.ts           # Transaction signing
+│   ├── compound/               # Compound V3 integration
+│   │   ├── markets.ts          # Market data fetching
+│   │   ├── supply.ts           # Supply operations
+│   │   ├── withdraw.ts         # Withdrawal operations
+│   │   ├── borrow.ts           # Borrowing operations
+│   │   └── contracts.ts        # Contract ABIs and addresses
+│   ├── encryption/             # E2E encryption & ZK proofs
+│   │   ├── e2ee.ts             # End-to-end encryption
+│   │   ├── zk-proofs.ts        # Zero-knowledge proof generation
+│   │   └── key-management.ts   # Key exchange protocols
+│   ├── webhooks/               # Webhook server
+│   │   ├── whatsapp.ts         # WhatsApp webhook handler
+│   │   └── security.ts         # Webhook verification
+│   ├── database/               # Database models & migrations
+│   │   ├── models/             # User, Wallet, Transaction models
+│   │   └── migrations/         # DB migration scripts
+│   ├── utils/                  # Shared utilities
+│   │   ├── logger.ts           # Structured logging
+│   │   ├── errors.ts           # Custom error types
+│   │   └── validators.ts       # Input validation
+│   └── config/                 # Configuration management
+│       └── index.ts
+├── tests/
+│   ├── unit/                   # Unit tests
+│   ├── integration/            # Integration tests
+│   └── e2e/                    # End-to-end tests
+├── scripts/                    # Deployment & maintenance scripts
+├── docs/                       # Technical documentation
+├── .env.example                # Environment variables template
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+## Coding Conventions
+
+### TypeScript Style
+```typescript
+// ✅ GOOD: Strict typing with proper error handling
+async function createWallet(userId: string): Promise<Result<Wallet, WalletError>> {
+  try {
+    const mnemonic = generateMnemonic(256);
+    const wallet = ethers.Wallet.fromPhrase(mnemonic);
+    const encrypted = await encryptPrivateKey(wallet.privateKey, userId);
+    
+    return Ok({ address: wallet.address, encrypted });
+  } catch (error) {
+    if (error instanceof CryptoError) {
+      return Err(new WalletError('ENCRYPTION_FAILED', error));
+    }
+    return Err(new WalletError('UNKNOWN_ERROR', error));
+  }
+}
+
+// ❌ BAD: Loose typing and poor error handling
+async function createWallet(userId: any) {
+  const mnemonic = generateMnemonic(256);
+  const wallet = ethers.Wallet.fromPhrase(mnemonic);
+  return wallet;
+}
+```
+
+### Security-Critical Functions
+```typescript
+// All security functions must:
+// 1. Have comprehensive JSDoc
+// 2. Validate all inputs
+// 3. Handle all error cases explicitly
+// 4. Be thoroughly tested
+// 5. Use constant-time operations where applicable
+
+/**
+ * Encrypts a private key using user-specific encryption key.
+ * 
+ * @param privateKey - The private key to encrypt (must be 32 bytes hex)
+ * @param userId - User identifier for key derivation
+ * @returns Encrypted private key with nonce and auth tag
+ * @throws {CryptoError} If encryption fails or inputs are invalid
+ * 
+ * @security CRITICAL - Private key exposure would compromise user funds
+ * @audit Required before production deployment
+ */
+async function encryptPrivateKey(
+  privateKey: string,
+  userId: string
+): Promise<EncryptedKey> {
+  // Input validation
+  if (!isValidPrivateKey(privateKey)) {
+    throw new CryptoError('INVALID_PRIVATE_KEY');
+  }
+  if (!isValidUserId(userId)) {
+    throw new CryptoError('INVALID_USER_ID');
+  }
+  
+  // Implementation...
+}
+```
+
+### Error Handling
+```typescript
+// Define custom error types
+export class CompoundChatError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public details?: unknown
+  ) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class WalletError extends CompoundChatError {}
+export class CompoundError extends CompoundChatError {}
+export class EncryptionError extends CompoundChatError {}
+
+// Use Result type for fallible operations
+type Result<T, E extends Error> = 
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+```
+
+### Async/Await Patterns
+```typescript
+// ✅ GOOD: Proper error propagation
+async function supplyToCompound(
+  amount: bigint,
+  token: string,
+  wallet: Wallet
+): Promise<Result<TransactionReceipt, CompoundError>> {
+  const contract = getCompoundContract();
+  
+  try {
+    const tx = await contract.supply(token, amount);
+    const receipt = await tx.wait();
+    return Ok(receipt);
+  } catch (error) {
+    logger.error('Supply failed', { error, amount, token });
+    return Err(new CompoundError('SUPPLY_FAILED', error));
+  }
+}
+
+// ❌ BAD: Swallowed errors
+async function supplyToCompound(amount, token, wallet) {
+  try {
+    const tx = await contract.supply(token, amount);
+    return tx.wait();
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## Security Checklist
+
+### For Every PR
+- [ ] No private keys or secrets in code
+- [ ] All user inputs validated and sanitized
+- [ ] SQL queries use parameterized statements
+- [ ] Cryptographic operations use secure libraries
+- [ ] Error messages don't leak sensitive information
+- [ ] Rate limiting on all external endpoints
+- [ ] Authentication required for sensitive operations
+- [ ] Audit logging for all financial transactions
+
+### For Milestone 1 Completion
+- [ ] Independent security review of wallet code
+- [ ] Penetration testing of webhook endpoints
+- [ ] Key management procedures documented
+- [ ] Disaster recovery plan created
+- [ ] Incident response playbook ready
+- [ ] User data backup strategy implemented
+
+## Testing Requirements
+
+### Unit Tests
+- **Coverage**: Minimum 85% for security-critical code
+- **Framework**: Jest with ts-jest
+- **Mocking**: Use `jest.mock()` for external dependencies
+- **Naming**: `describe('FunctionName', () => { it('should ...', ...) })`
+
+### Integration Tests
+- **Scope**: Test interactions between modules
+- **Environment**: Use Docker Compose for local testing
+- **Data**: Use test fixtures, never production data
+- **Cleanup**: Always reset state between tests
+
+### E2E Tests
+- **Framework**: Playwright or Puppeteer
+- **Network**: Test on Sepolia testnet only
+- **Scenarios**: Cover complete user flows (wallet creation → supply → withdraw)
+- **Performance**: Monitor response times and gas costs
+
+## Environment Variables
+
+```bash
+# Required for Milestone 1
+NODE_ENV=development|production
+PORT=3000
+
+# Messaging Platform
+WHATSAPP_API_KEY=xxx
+WHATSAPP_WEBHOOK_SECRET=xxx
+WHATSAPP_PHONE_NUMBER_ID=xxx
+
+# Ethereum
+ETHEREUM_RPC_URL=https://eth-mainnet.alchemyapi.io/v2/xxx
+ETHEREUM_RPC_FALLBACK=https://mainnet.infura.io/v3/xxx
+SEPOLIA_RPC_URL=https://eth-sepolia.alchemyapi.io/v2/xxx
+
+# Compound V3
+COMPOUND_COMET_ADDRESS_USDC=0xc3d688B66703497DAA19211EEdff47f25384cdc3
+COMPOUND_COMET_ADDRESS_ETH=0xA17581A9E3356d9A858b789D68B4d866e593aE94
+
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/compoundchat
+REDIS_URL=redis://localhost:6379
+
+# Encryption
+MASTER_ENCRYPTION_KEY=xxx  # Store in secret manager, never in .env
+KMS_KEY_ID=xxx  # AWS KMS key for production
+
+# Monitoring
+SENTRY_DSN=xxx
+LOG_LEVEL=info|debug|error
+```
+
+## Git Workflow
+
+### Branch Naming
+- `feature/milestone-1-wallet-creation`
+- `fix/encryption-key-derivation`
+- `security/audit-webhook-validation`
+
+### Commit Messages
+```
+feat(wallet): implement HD wallet derivation with BIP44
+
+- Add ethers.js HD wallet support
+- Implement BIP44 path derivation for Ethereum
+- Add comprehensive unit tests
+- Update wallet documentation
+
+Closes #123
+```
+
+### PR Requirements
+- All tests passing
+- Code coverage maintained or improved
+- Security checklist completed
+- Documentation updated
+- Reviewed by at least one team member
+
+## Milestone 1 Specific Rules
+
+### Week 1 Focus: Foundation
+- Set up project structure
+- Implement webhook server with security
+- Create basic bot command routing
+- Database schema design
+
+### Week 2 Focus: Wallet
+- Non-custodial wallet creation
+- Key encryption and storage
+- Mnemonic generation and recovery
+- Wallet import functionality
+
+### Week 3 Focus: Compound Integration
+- Connect to Compound V3 contracts
+- Implement balance checking
+- Supply functionality
+- Withdraw functionality
+- Market data fetching
+
+### Week 4 Focus: Security & Testing
+- End-to-end encryption implementation
+- ZK proof basic implementation
+- Comprehensive testing
+- Security hardening
+- Internal beta deployment
+
+## Debugging & Logging
+
+### Structured Logging
+```typescript
+import { logger } from './utils/logger';
+
+// ✅ GOOD: Structured logs with context
+logger.info('Wallet created', {
+  userId: user.id,
+  address: wallet.address,
+  timestamp: Date.now()
+});
+
+logger.error('Supply transaction failed', {
+  userId: user.id,
+  amount: amount.toString(),
+  token,
+  error: error.message,
+  txHash: tx?.hash
+});
+
+// ❌ BAD: Unstructured console logs
+console.log('wallet created');
+console.error(error);
+```
+
+### Never Log Sensitive Data
+- ❌ Private keys
+- ❌ Mnemonic phrases
+- ❌ Passwords or PINs
+- ❌ Full phone numbers (mask: +254***1234)
+- ❌ Transaction amounts in production logs
+
+## Dependencies
+
+### Allowed Libraries
+- ✅ `ethers` - Ethereum interactions
+- ✅ `express` - Web framework
+- ✅ `pg` - PostgreSQL client
+- ✅ `redis` - Redis client
+- ✅ `winston` - Logging
+- ✅ `joi` - Input validation
+- ✅ `tweetnacl` - Cryptography
+- ✅ `bip39` - Mnemonic generation
+- ✅ `snarkjs` - Zero-knowledge proofs
+
+### Forbidden Libraries
+- ❌ `web3.js` - Use ethers.js instead
+- ❌ `crypto-js` - Use native crypto or tweetnacl
+- ❌ Any library with known vulnerabilities
+- ❌ Unmaintained packages (last update >2 years)
+
+## Performance Guidelines
+
+### Response Times
+- Webhook acknowledgment: <200ms
+- Balance check: <2s
+- Supply transaction: <30s (blockchain dependent)
+- Market data: <1s (cached)
+
+### Resource Limits
+- Max message size: 4KB
+- Max concurrent transactions per user: 1
+- Rate limit: 10 requests/minute per user
+- Database query timeout: 5s
+
+## Accessibility & UX
+
+### Message Design
+- ✅ Use simple English (grade 8 reading level)
+- ✅ Provide clear next steps
+- ✅ Use emojis sparingly for clarity (✅ ❌ 💰 ⚠️)
+- ✅ Include help text in error messages
+- ❌ Never use technical jargon (gas, nonce, wei)
+- ❌ Never show raw addresses (truncate: 0x1234...5678)
+
+### Command Examples
+```
+✅ GOOD:
+"Balance: 💰 $150.25 USDC
+Earning: 📈 4.2% APY
+Daily interest: $0.17"
+
+❌ BAD:
+"Balance: 150250000 (6 decimals)
+APY: 0.042
+Block: 18934234"
+```
+
+## Deployment Checklist
+
+### Before Milestone 1 Beta
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Security audit completed
+- [ ] Load testing done (100+ concurrent users)
+- [ ] Database backups configured
+- [ ] Monitoring and alerts set up
+- [ ] Error tracking configured (Sentry)
+- [ ] Rate limiting enabled
+- [ ] HTTPS enforced
+- [ ] Environment variables secured
+- [ ] Disaster recovery plan documented
+- [ ] Team trained on incident response
+
+## Documentation Requirements
+
+Every module must have:
+1. **README.md**: Purpose, usage examples, API reference
+2. **SECURITY.md**: Security considerations and threat model
+3. **TESTING.md**: How to run tests and add new ones
+4. **API.md**: API endpoints and webhook formats
+
+## Questions & Support
+
+### Decision-Making Priority
+1. **Security** - When in doubt, choose the more secure option
+2. **User Experience** - Simplicity over features
+3. **Reliability** - Fail safely and gracefully
+4. **Performance** - Only optimize after measuring
+
+### Code Review Focus
+- Security vulnerabilities
+- Proper error handling
+- Test coverage
+- Documentation completeness
+- Performance implications
+- User experience impact
+
+---
+
+**Remember**: We're building financial infrastructure for people who trust us with their savings. Every line of code must reflect that responsibility.
+
