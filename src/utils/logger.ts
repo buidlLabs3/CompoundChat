@@ -90,7 +90,7 @@ const consoleFormat = winston.format.combine(
 );
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env['LOG_LEVEL'] || 'info',
   format: logFormat,
   transports: [
     // Console for development

@@ -108,20 +108,23 @@ function getEnvVarBoolean(key: string, defaultValue: boolean): boolean {
   return value.toLowerCase() === 'true';
 }
 
+const nodeEnv = (process.env['NODE_ENV'] as Config['nodeEnv']) || 'development';
+const isTestEnv = nodeEnv === 'test';
+
 export const config: Config = {
-  nodeEnv: (process.env.NODE_ENV as Config['nodeEnv']) || 'development',
+  nodeEnv,
   port: getEnvVarNumber('PORT', 3000),
   logLevel: getEnvVar('LOG_LEVEL', false) || 'info',
 
   whatsapp: {
-    apiKey: getEnvVar('WHATSAPP_API_KEY', config?.nodeEnv !== 'test'),
-    webhookSecret: getEnvVar('WHATSAPP_WEBHOOK_SECRET', config?.nodeEnv !== 'test'),
-    phoneNumberId: getEnvVar('WHATSAPP_PHONE_NUMBER_ID', config?.nodeEnv !== 'test'),
-    businessAccountId: getEnvVar('WHATSAPP_BUSINESS_ACCOUNT_ID', config?.nodeEnv !== 'test'),
+    apiKey: getEnvVar('WHATSAPP_API_KEY', !isTestEnv),
+    webhookSecret: getEnvVar('WHATSAPP_WEBHOOK_SECRET', !isTestEnv),
+    phoneNumberId: getEnvVar('WHATSAPP_PHONE_NUMBER_ID', !isTestEnv),
+    businessAccountId: getEnvVar('WHATSAPP_BUSINESS_ACCOUNT_ID', !isTestEnv),
   },
 
   ethereum: {
-    rpcUrl: getEnvVar('ETHEREUM_RPC_URL', config?.nodeEnv !== 'test'),
+    rpcUrl: getEnvVar('ETHEREUM_RPC_URL', !isTestEnv),
     rpcFallback: getEnvVar('ETHEREUM_RPC_FALLBACK', false),
     sepoliaRpcUrl: getEnvVar('SEPOLIA_RPC_URL', false),
     chainId: getEnvVarNumber('CHAIN_ID', 1),
