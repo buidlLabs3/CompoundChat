@@ -3,13 +3,13 @@
  */
 
 import { ethers } from 'ethers';
-import { memoryStore } from '@database/memory-store';
+import { database } from '@database/index';
 import { getProvider } from '@compound/provider';
 import { COMET_ABI, ERC20_ABI, COMPOUND_V3_SEPOLIA, SEPOLIA_TOKENS } from '@compound/contracts';
 import { maskAddress } from '@utils/logger';
 
 export async function handleBalance(from: string): Promise<string> {
-  const wallet = await memoryStore.getWallet(from);
+  const wallet = await database.getWallet(from);
 
   if (!wallet) {
     return `❌ You don't have a wallet yet.\n\nType *create wallet* to get started.`;

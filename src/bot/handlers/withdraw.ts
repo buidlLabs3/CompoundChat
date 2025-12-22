@@ -2,13 +2,13 @@
  * Withdraw command handler
  */
 
-import { memoryStore } from '@database/memory-store';
+import { database } from '@database/index';
 import { decryptPrivateKey } from '@wallet/encryption';
 import { withdrawFromCompound } from '@compound/withdraw';
 import { isOk } from '@utils/result';
 
 export async function handleWithdraw(from: string, args: string[]): Promise<string> {
-  const wallet = await memoryStore.getWallet(from);
+  const wallet = await database.getWallet(from);
 
   if (!wallet) {
     return `❌ You don't have a wallet yet.\n\nType *create wallet* to get started.`;

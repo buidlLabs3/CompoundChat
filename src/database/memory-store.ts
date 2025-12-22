@@ -3,7 +3,7 @@
  * TODO: Replace with PostgreSQL in production
  */
 
-interface UserWallet {
+export interface UserWallet {
   phoneNumber: string;
   address: string;
   encryptedPrivateKey: string;
@@ -16,7 +16,11 @@ interface UserWallet {
 const walletsStore = new Map<string, UserWallet>();
 
 export const memoryStore = {
-  async saveWallet(phoneNumber: string, wallet: Omit<UserWallet, 'phoneNumber' | 'createdAt'>): Promise<void> {
+  async saveWallet(
+    phoneNumber: string,
+    _whatsappId: string,
+    wallet: Omit<UserWallet, 'phoneNumber' | 'createdAt'>
+  ): Promise<void> {
     walletsStore.set(phoneNumber, {
       phoneNumber,
       ...wallet,
@@ -35,5 +39,19 @@ export const memoryStore = {
   async deleteWallet(phoneNumber: string): Promise<void> {
     walletsStore.delete(phoneNumber);
   },
+
+  async saveTransaction(
+    _phoneNumber: string,
+    _tx: {
+      txHash: string;
+      type: string;
+      token: string;
+      amount: string;
+      walletAddress: string;
+    }
+  ): Promise<void> {
+    // No-op for memory store
+  },
 };
+
 

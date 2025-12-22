@@ -147,3 +147,4 @@ Before mainnet:
 
 **"Wallet not found":** Create wallet first with `create wallet`
 
+

@@ -15,6 +15,7 @@ export interface WalletData {
   encryptedPrivateKey: string;
   salt: string;
   iv: string;
+  authTag: string;
 }
 
 /**
@@ -45,6 +46,7 @@ export async function createWallet(
       encryptedPrivateKey: encrypted.ciphertext,
       salt: encrypted.salt,
       iv: encrypted.iv,
+      authTag: encrypted.authTag,
     });
   } catch (error) {
     logger.error('Wallet creation failed', { userId, error });
@@ -79,6 +81,7 @@ export async function importWalletFromMnemonic(
       encryptedPrivateKey: encrypted.ciphertext,
       salt: encrypted.salt,
       iv: encrypted.iv,
+      authTag: encrypted.authTag,
     });
   } catch (error) {
     return Err(
@@ -86,4 +89,5 @@ export async function importWalletFromMnemonic(
     );
   }
 }
+
 

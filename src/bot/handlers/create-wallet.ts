@@ -3,13 +3,14 @@
  */
 
 import { createWallet } from '@wallet/creation';
-import { memoryStore } from '@database/memory-store';
+import { database } from '@database/index';
+import { encryptMnemonic } from '@encryption/e2ee';
 import { maskAddress } from '@utils/logger';
 import { isOk } from '@utils/result';
 
 export async function handleCreateWallet(from: string): Promise<string> {
   // Check if user already has a wallet
-  const existing = await memoryStore.getWallet(from);
+  const existing = await database.getWallet(from);
   if (existing) {
     return `You already have a wallet!\n\n💼 Address: \`${maskAddress(existing.address)}\`\n\nType *balance* to check your funds.`;
   }
@@ -21,15 +22,18 @@ export async function handleCreateWallet(from: string): Promise<string> {
     return `❌ Failed to create wallet: ${result.error.message}\n\nPlease try again later.`;
   }
 
-  const { address, mnemonic, encryptedPrivateKey, salt, iv } = result.value;
+  const { address, mnemonic, encryptedPrivateKey, salt, iv, authTag } = result.value;
+
+  // Encrypt mnemonic for secure delivery
+  const { passphrase } = encryptMnemonic(mnemonic);
 
   // Save to database
-  await memoryStore.saveWallet(from, {
+  await database.saveWallet(from, from, {
     address,
     encryptedPrivateKey,
     salt,
     iv,
-    authTag: '', // Added in encryption
+    authTag,
   });
 
   return `✅ *Wallet Created Successfully!*
@@ -37,22 +41,27 @@ export async function handleCreateWallet(from: string): Promise<string> {
 💼 Your Address:
 \`${address}\`
 
-🔐 *IMPORTANT - Save Your Recovery Phrase:*
+🔐 *SAVE YOUR RECOVERY PHRASE:*
 \`\`\`
 ${mnemonic}
 \`\`\`
 
-⚠️ *Security Warning:*
-• Write down these 24 words on paper
-• NEVER share them with anyone
-• Anyone with these words can access your funds
-• CompoundChat will NEVER ask for your recovery phrase
+🔒 *Encrypted Backup:*
+Passphrase: \`${passphrase}\`
+(Use this to recover if you lose your phrase)
+
+⚠️ *Security:*
+• Write down the 24 words on paper
+• Save the passphrase separately
+• NEVER share with anyone
+• CompoundChat can't recover lost phrases
 
 📱 *Next Steps:*
-1. Fund your wallet with testnet USDC
-2. Type *balance* to check your funds
+1. Get Sepolia testnet USDC (faucet)
+2. Type *balance* to check funds
 3. Type *supply 10 USDC* to start earning
 
-_This wallet is on Sepolia testnet for testing_`;
+_Sepolia Testnet - Safe for Testing_ 🧪`;
 }
+
 
