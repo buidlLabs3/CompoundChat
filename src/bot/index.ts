@@ -11,6 +11,7 @@ import { handleWithdraw } from './handlers/withdraw';
 import { handleMarkets } from './handlers/markets';
 import { handleCreateWallet } from './handlers/create-wallet';
 import { handleWalletInfo } from './handlers/wallet';
+import { handleDeposit } from './handlers/deposit';
 
 interface ParsedCommand {
   action: string;
@@ -48,6 +49,9 @@ function parseCommand(message: string): ParsedCommand {
     'wallet info': 'wallet',
     wallet: 'wallet',
     address: 'wallet',
+    deposit: 'deposit',
+    fund: 'deposit',
+    topup: 'deposit',
   };
 
   return {
@@ -79,6 +83,9 @@ export async function handleMessage(
         break;
       case 'wallet':
         response = await handleWalletInfo(from);
+        break;
+      case 'deposit':
+        response = await handleDeposit(from);
         break;
       case 'balance':
         response = await handleBalance(from);

@@ -12,7 +12,17 @@ export async function handleCreateWallet(from: string): Promise<string> {
   // Check if user already has a wallet
   const existing = await database.getWallet(from);
   if (existing) {
-    return `You already have a wallet!\n\n💼 Address: \`${maskAddress(existing.address)}\`\n\nType *balance* to check your funds.`;
+    return `✅ You already have a wallet!
+
+💼 Address: \`${existing.address}\`
+
+📱 *Available Commands:*
+• *my wallet* - View wallet details
+• *balance* - Check your funds
+• *markets* - View Compound markets
+• *supply [amount] USDC* - Deposit to earn interest
+
+⚠️ *Note:* You can only have ONE wallet per phone number. This keeps your funds safe.`;
   }
 
   // Create new wallet

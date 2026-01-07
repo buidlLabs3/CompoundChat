@@ -4,7 +4,12 @@
 
 import { ethers } from 'ethers';
 import { getWallet } from './provider';
-import { COMET_ABI, ERC20_ABI, COMPOUND_V3_SEPOLIA, SEPOLIA_TOKENS } from './contracts';
+import {
+  COMET_ABI,
+  ERC20_ABI,
+  COMPOUND_V3_SEPOLIA,
+  SEPOLIA_TOKENS,
+} from './contracts';
 import { CompoundError } from '@utils/errors';
 import { Result, Ok, Err } from '@utils/result';
 import { logger, maskAddress } from '@utils/logger';
@@ -14,13 +19,23 @@ export async function withdrawFromCompound(
   tokenSymbol: string,
   amount: string
 ): Promise<Result<string, CompoundError>> {
+  const tokenMap: Record<string, string> = {
+    ...SEPOLIA_TOKENS,
+    ETH: SEPOLIA_TOKENS.WETH,
+  };
+  const supportedTokens = Object.keys(tokenMap);
+
   try {
     const wallet = getWallet(privateKey);
 
-    const tokenAddress = SEPOLIA_TOKENS[tokenSymbol as keyof typeof SEPOLIA_TOKENS];
+    const normalizedToken = tokenSymbol.toUpperCase();
+    const tokenAddress = tokenMap[normalizedToken];
     if (!tokenAddress) {
       return Err(
-        new CompoundError('INVALID_TOKEN', `Token ${tokenSymbol} not supported`)
+        new CompoundError(
+          'INVALID_TOKEN',
+          `Token ${tokenSymbol} not supported. Supported: ${supportedTokens.join(', ')}`
+        )
       );
     }
 
@@ -51,6 +66,15 @@ export async function withdrawFromCompound(
 
     const tx = await cometContract['withdraw']!(tokenAddress, amountWei);
     const receipt = await tx.wait();
+
+    // Special-case ETH: unwrap WETH to ETH
+    if (normalizedToken === 'ETH') {
+      const wethAbi = ['function withdraw(uint256 amount)'];
+      const wethContract = new ethers.Contract(tokenAddress, wethAbi, wallet);
+      const unwrapTx = await wethContract['withdraw']!(amountWei);
+      await unwrapTx.wait();
+      return Ok(unwrapTx.hash);
+    }
 
     logger.info('Withdrawal successful', {
       txHash: receipt.hash,

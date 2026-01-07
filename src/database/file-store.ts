@@ -70,9 +70,17 @@ class FileStore {
     return this.wallets.get(userId) || null;
   }
 
-  async saveWallet(userId: string, wallet: UserWallet): Promise<void> {
+  async saveWallet(
+    phoneNumber: string,
+    _whatsappId: string,
+    wallet: Omit<UserWallet, 'phoneNumber' | 'createdAt'>
+  ): Promise<void> {
     await this.ensureInitialized();
-    this.wallets.set(userId, wallet);
+    this.wallets.set(phoneNumber, {
+      phoneNumber,
+      ...wallet,
+      createdAt: Date.now(),
+    });
     await this.saveToFile();
   }
 
@@ -89,6 +97,19 @@ class FileStore {
     await this.ensureInitialized();
     this.wallets.delete(userId);
     await this.saveToFile();
+  }
+
+  async saveTransaction(
+    _phoneNumber: string,
+    _tx: {
+      txHash: string;
+      type: string;
+      token: string;
+      amount: string;
+      walletAddress: string;
+    }
+  ): Promise<void> {
+    // TODO: implement file-based transaction history if needed
   }
 
   async getAllWallets(): Promise<UserWallet[]> {

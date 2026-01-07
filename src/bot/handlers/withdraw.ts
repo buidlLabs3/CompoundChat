@@ -48,9 +48,6 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
     // Withdraw from Compound
     const result = await withdrawFromCompound(privateKey, token, amount);
 
-    // Clear private key from memory
-    (privateKey as any) = null;
-
     if (!isOk(result)) {
       return `❌ ${result.error.message}`;
     }

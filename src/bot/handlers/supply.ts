@@ -48,9 +48,6 @@ export async function handleSupply(from: string, args: string[]): Promise<string
     // Supply to Compound
     const result = await supplyToCompound(privateKey, token, amount);
 
-    // Clear private key from memory
-    (privateKey as any) = null;
-
     if (!isOk(result)) {
       return `❌ ${result.error.message}`;
     }
