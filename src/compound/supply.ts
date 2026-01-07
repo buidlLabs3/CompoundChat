@@ -80,8 +80,9 @@ export async function supplyToCompound(
 
     const allowance = await tokenContract['allowance']!(wallet.address, cometAddress);
     if (allowance < amountWei) {
-      logger.info('Approving Comet', { token: tokenSymbol, amount });
-      const approveTx = await (tokenWithSigner as any).approve(cometAddress, amountWei);
+      const approveAmount = ethers.MaxUint256;
+      logger.info('Approving Comet', { token: tokenSymbol, amount: 'MAX' });
+      const approveTx = await (tokenWithSigner as any).approve(cometAddress, approveAmount);
       await approveTx.wait();
     }
 
