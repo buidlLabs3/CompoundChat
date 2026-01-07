@@ -27,8 +27,12 @@ export async function handleSupply(from: string, args: string[]): Promise<string
   }
 
   const supported = Object.keys(SEPOLIA_TOKENS);
+  const allowedBase = ['USDC'];
   if (!supported.includes(token)) {
     return `❌ Token ${token} not supported.\n\nSupported tokens: ${supported.join(', ')}`;
+  }
+  if (!allowedBase.includes(token)) {
+    return `❌ Sepolia USDC market only accepts USDC.\n\nSwap ETH→USDC, then supply.\nSupported: ${allowedBase.join(', ')}`;
   }
 
   try {

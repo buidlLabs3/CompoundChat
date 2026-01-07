@@ -19,7 +19,8 @@ export async function supplyToCompound(
   tokenSymbol: string,
   amount: string
 ): Promise<Result<string, CompoundError>> {
-  // Merge tokens and ensure ETH alias maps to WETH
+  // Sepolia Comet (USDC) only accepts USDC as base
+  const allowedBaseTokens = ['USDC'];
   const tokenMap: Record<string, string> = {
     ...SEPOLIA_TOKENS,
     ETH: SEPOLIA_TOKENS.WETH,
@@ -42,53 +43,35 @@ export async function supplyToCompound(
       );
     }
 
+    // Enforce Comet base asset (USDC) on Sepolia
+    if (!allowedBaseTokens.includes(normalizedToken)) {
+      return Err(
+        new CompoundError(
+          'UNSUPPORTED_TOKEN',
+          `Sepolia USDC market only accepts USDC. Swap ETH->USDC, then supply. Supported: ${allowedBaseTokens.join(', ')}`
+        )
+      );
+    }
+
     // Special-case ETH: wrap to WETH then supply WETH to Comet
-    let supplyTokenAddress = tokenAddress;
     let amountWei: bigint;
     let decimals: number;
     let tokenContract: ethers.Contract;
 
-    if (normalizedToken === 'ETH') {
-      // Wrap ETH to WETH
-      const wethAbi = [
-        'function deposit() payable',
-        'function balanceOf(address) view returns (uint256)',
-        'function allowance(address,address) view returns (uint256)',
-        'function approve(address spender, uint256 amount) returns (bool)',
-      ];
-      const wethContract = new ethers.Contract(tokenAddress, wethAbi, wallet);
-      decimals = 18;
-      amountWei = ethers.parseUnits(amount, decimals);
+    // ERC20 path (USDC base)
+    tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    decimals = await tokenContract['decimals']!();
+    amountWei = ethers.parseUnits(amount, decimals);
 
-      const ethBalance = await provider.getBalance(wallet.address);
-      if (ethBalance < amountWei) {
-        return Err(
-          new CompoundError(
-            'INSUFFICIENT_BALANCE',
-            `Insufficient ETH. You have ${ethers.formatUnits(ethBalance, 18)} but tried to supply ${amount}`
-          )
-        );
-      }
-
-      const wrapTx = await wethContract.deposit({ value: amountWei });
-      await wrapTx.wait();
-      tokenContract = wethContract;
-    } else {
-      // ERC20 path
-      tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-      decimals = await tokenContract['decimals']!();
-      amountWei = ethers.parseUnits(amount, decimals);
-
-      // Check balance
-      const balance = await tokenContract['balanceOf']!(wallet.address);
-      if (balance < amountWei) {
-        return Err(
-          new CompoundError(
-            'INSUFFICIENT_BALANCE',
-            `Insufficient ${normalizedToken}. You have ${ethers.formatUnits(balance, decimals)} but tried to supply ${amount}`
-          )
-        );
-      }
+    // Check balance
+    const balance = await tokenContract['balanceOf']!(wallet.address);
+    if (balance < amountWei) {
+      return Err(
+        new CompoundError(
+          'INSUFFICIENT_BALANCE',
+          `Insufficient ${normalizedToken}. You have ${ethers.formatUnits(balance, decimals)} but tried to supply ${amount}`
+        )
+      );
     }
 
     // Approve Comet to spend tokens

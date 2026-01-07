@@ -27,8 +27,12 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
   }
 
   const supported = Object.keys(SEPOLIA_TOKENS);
+  const allowedBase = ['USDC'];
   if (!supported.includes(token)) {
     return `❌ Token ${token} not supported.\n\nSupported tokens: ${supported.join(', ')}`;
+  }
+  if (!allowedBase.includes(token)) {
+    return `❌ Sepolia USDC market only accepts USDC.\n\nWithdraw base USDC, or swap to ETH after receiving.\nSupported: ${allowedBase.join(', ')}`;
   }
 
   try {

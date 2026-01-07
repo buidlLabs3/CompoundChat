@@ -19,6 +19,7 @@ export async function withdrawFromCompound(
   tokenSymbol: string,
   amount: string
 ): Promise<Result<string, CompoundError>> {
+  const allowedBaseTokens = ['USDC'];
   const tokenMap: Record<string, string> = {
     ...SEPOLIA_TOKENS,
     ETH: SEPOLIA_TOKENS.WETH,
@@ -35,6 +36,16 @@ export async function withdrawFromCompound(
         new CompoundError(
           'INVALID_TOKEN',
           `Token ${tokenSymbol} not supported. Supported: ${supportedTokens.join(', ')}`
+        )
+      );
+    }
+
+    // Enforce Comet base asset (USDC) on Sepolia
+    if (!allowedBaseTokens.includes(normalizedToken)) {
+      return Err(
+        new CompoundError(
+          'UNSUPPORTED_TOKEN',
+          `Sepolia USDC market only accepts USDC. Swap ETH->USDC, then withdraw base. Supported: ${allowedBaseTokens.join(', ')}`
         )
       );
     }
