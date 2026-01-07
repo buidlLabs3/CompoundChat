@@ -34,7 +34,9 @@ export const ERC20_ABI = [
 
 // Token addresses on Sepolia testnet
 export const SEPOLIA_TOKENS = {
-  USDC: '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8',
+  // Base token for Sepolia USDC Comet
+  USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+  // WETH for potential future markets (not used in current Comet)
   WETH: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
   ETH: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9', // alias to WETH (wrap/unwrap)
 };
