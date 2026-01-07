@@ -7,6 +7,9 @@ export async function handleHelp(_from: string): Promise<string> {
 
 Earn interest on your crypto with Compound V3:
 
+🔐 *create wallet* - Create a new wallet
+💳 *my wallet* - View your wallet address
+
 💰 *supply [amount] [token]* - Deposit to earn interest
    Example: supply 100 USDC
 
@@ -17,11 +20,12 @@ Earn interest on your crypto with Compound V3:
 
 📈 *markets* - View all lending markets & APYs
 
-🔐 *create wallet* - Create a new wallet
-
 ❓ *help* - Show this message
 
 _CompoundChat - DeFi for Everyone_ 🌍`;
 }
+
+
+
 
 

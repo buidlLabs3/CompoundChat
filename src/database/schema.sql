@@ -43,3 +43,6 @@ CREATE INDEX idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX idx_transactions_status ON transactions(status);
 CREATE INDEX idx_transactions_hash ON transactions(tx_hash);
 
+
+
+

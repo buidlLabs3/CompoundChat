@@ -10,6 +10,7 @@ import { handleSupply } from './handlers/supply';
 import { handleWithdraw } from './handlers/withdraw';
 import { handleMarkets } from './handlers/markets';
 import { handleCreateWallet } from './handlers/create-wallet';
+import { handleWalletInfo } from './handlers/wallet';
 
 interface ParsedCommand {
   action: string;
@@ -36,12 +37,17 @@ function parseCommand(message: string): ParsedCommand {
     lend: 'supply',
     withdraw: 'withdraw',
     'take out': 'withdraw',
+    send: 'withdraw',
     markets: 'markets',
     market: 'markets',
     apy: 'markets',
     'create wallet': 'create',
     'new wallet': 'create',
     create: 'create',
+    'my wallet': 'wallet',
+    'wallet info': 'wallet',
+    wallet: 'wallet',
+    address: 'wallet',
   };
 
   return {
@@ -71,6 +77,9 @@ export async function handleMessage(
       case 'create':
         response = await handleCreateWallet(from);
         break;
+      case 'wallet':
+        response = await handleWalletInfo(from);
+        break;
       case 'balance':
         response = await handleBalance(from);
         break;
@@ -89,12 +98,19 @@ export async function handleMessage(
 
     await sendWhatsAppMessage(from, response);
   } catch (error) {
-    logger.error('Error handling message', { error, from: maskPhoneNumber(from) });
+    logger.error('Error handling message', { 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      from: maskPhoneNumber(from) 
+    });
     await sendWhatsAppMessage(
       from,
       'Sorry, something went wrong. Please try again later.'
     );
   }
 }
+
+
+
 
 

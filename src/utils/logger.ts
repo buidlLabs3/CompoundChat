@@ -23,13 +23,19 @@ const SENSITIVE_FIELDS = [
 /**
  * Sanitize log data to remove sensitive information
  */
-function sanitize(data: unknown): unknown {
+function sanitize(data: unknown, seen = new WeakSet()): unknown {
   if (typeof data !== 'object' || data === null) {
     return data;
   }
 
+  // Prevent circular references
+  if (seen.has(data as object)) {
+    return '[Circular]';
+  }
+  seen.add(data as object);
+
   if (Array.isArray(data)) {
-    return data.map(sanitize);
+    return data.map(item => sanitize(item, seen));
   }
 
   const sanitized: Record<string, unknown> = {};
@@ -37,7 +43,7 @@ function sanitize(data: unknown): unknown {
     if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
       sanitized[key] = '[REDACTED]';
     } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = sanitize(value);
+      sanitized[key] = sanitize(value, seen);
     } else {
       sanitized[key] = value;
     }

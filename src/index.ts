@@ -13,6 +13,9 @@ import { errorHandler } from '@webhooks/middleware';
 
 const app = express();
 
+// Trust proxy for ngrok/load balancers
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({ origin: config.nodeEnv === 'production' ? false : '*' }));
@@ -56,5 +59,8 @@ process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
   process.exit(0);
 });
+
+
+
 
 

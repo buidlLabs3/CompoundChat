@@ -18,6 +18,7 @@ interface Config {
   whatsapp: {
     apiKey: string;
     webhookSecret: string;
+    appSecret: string;
     phoneNumberId: string;
     businessAccountId: string;
   };
@@ -119,6 +120,7 @@ export const config: Config = {
   whatsapp: {
     apiKey: getEnvVar('WHATSAPP_API_KEY', !isTestEnv),
     webhookSecret: getEnvVar('WHATSAPP_WEBHOOK_SECRET', !isTestEnv),
+    appSecret: getEnvVar('WHATSAPP_APP_SECRET', !isTestEnv),
     phoneNumberId: getEnvVar('WHATSAPP_PHONE_NUMBER_ID', !isTestEnv),
     businessAccountId: getEnvVar('WHATSAPP_BUSINESS_ACCOUNT_ID', !isTestEnv),
   },
@@ -142,13 +144,13 @@ export const config: Config = {
   },
 
   database: {
-    url: getEnvVar('DATABASE_URL'),
+    url: getEnvVar('DATABASE_URL', false) || '',
     poolMin: getEnvVarNumber('DATABASE_POOL_MIN', 2),
     poolMax: getEnvVarNumber('DATABASE_POOL_MAX', 10),
   },
 
   redis: {
-    url: getEnvVar('REDIS_URL'),
+    url: getEnvVar('REDIS_URL', false) || '',
     password: getEnvVar('REDIS_PASSWORD', false),
     tls: getEnvVarBoolean('REDIS_TLS', false),
   },

@@ -16,6 +16,7 @@ export const rateLimiter = rateLimit({
   message: 'Too many requests',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation for ngrok
 });
 
 // Verify WhatsApp webhook signature
@@ -40,16 +41,26 @@ export function verifyWebhookSignature(
   }
 
   const expectedSignature = crypto
-    .createHmac('sha256', config.whatsapp.webhookSecret)
+    .createHmac('sha256', config.whatsapp.appSecret)
     .update(rawBody)
     .digest('hex');
 
   const receivedSignature = signature.replace('sha256=', '');
 
+  // Ensure both buffers are the same length before comparing
+  if (expectedSignature.length !== receivedSignature.length) {
+    logger.warn('Invalid webhook signature length', {
+      expected: expectedSignature.length,
+      received: receivedSignature.length
+    });
+    res.sendStatus(401);
+    return;
+  }
+
   if (
     !crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(receivedSignature)
+      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(receivedSignature, 'hex')
     )
   ) {
     logger.warn('Invalid webhook signature');
@@ -75,5 +86,8 @@ export function errorHandler(
     res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+
+
 
 

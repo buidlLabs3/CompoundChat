@@ -28,9 +28,8 @@ export async function createWallet(
     // Generate 24-word mnemonic (256-bit entropy)
     const mnemonic = bip39.generateMnemonic(256);
 
-    // Derive HD wallet using BIP44 path: m/44'/60'/0'/0/0
-    const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic);
-    const wallet = hdNode.derivePath("m/44'/60'/0'/0/0");
+    // Create HD wallet using BIP44 path for Ethereum: m/44'/60'/0'/0/0
+    const wallet = ethers.HDNodeWallet.fromPhrase(mnemonic, "m/44'/60'/0'/0/0");
 
     // Encrypt private key
     const encrypted = await encryptPrivateKey(wallet.privateKey, userId);
@@ -70,8 +69,7 @@ export async function importWalletFromMnemonic(
       );
     }
 
-    const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic);
-    const wallet = hdNode.derivePath("m/44'/60'/0'/0/0");
+    const wallet = ethers.HDNodeWallet.fromPhrase(mnemonic, "m/44'/60'/0'/0/0");
 
     const encrypted = await encryptPrivateKey(wallet.privateKey, userId);
 
