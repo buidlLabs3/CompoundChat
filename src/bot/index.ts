@@ -12,6 +12,7 @@ import { handleMarkets } from './handlers/markets';
 import { handleCreateWallet } from './handlers/create-wallet';
 import { handleWalletInfo } from './handlers/wallet';
 import { handleDeposit } from './handlers/deposit';
+import { handleBorrow } from './handlers/borrow';
 
 interface ParsedCommand {
   action: string;
@@ -39,6 +40,8 @@ function parseCommand(message: string): ParsedCommand {
     withdraw: 'withdraw',
     'take out': 'withdraw',
     send: 'withdraw',
+    borrow: 'borrow',
+    loan: 'borrow',
     markets: 'markets',
     market: 'markets',
     apy: 'markets',
@@ -95,6 +98,9 @@ export async function handleMessage(
         break;
       case 'withdraw':
         response = await handleWithdraw(from, args);
+        break;
+      case 'borrow':
+        response = await handleBorrow(from, args);
         break;
       case 'markets':
         response = await handleMarkets(from);

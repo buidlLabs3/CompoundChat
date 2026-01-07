@@ -16,6 +16,8 @@ Earn interest on your crypto with Compound V3:
 💸 *withdraw [amount] USDC* - Withdraw your funds
    Example: withdraw 5 USDC
 
+💳 *borrow [amount] USDC* - (Disabled on this Sepolia setup; see note)
+
 📊 *balance* - Check your wallet & earnings
 
 📈 *markets* - View all lending markets & APYs
