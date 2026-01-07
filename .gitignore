@@ -80,3 +80,6 @@ Thumbs.db
 docker-compose.override.yml
 .dockerignore
 
+
+# Wallet data (sensitive)
+.data/

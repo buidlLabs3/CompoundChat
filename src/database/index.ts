@@ -1,11 +1,12 @@
 /**
  * Database abstraction layer
- * Switches between PostgreSQL and in-memory based on environment
+ * Switches between PostgreSQL, file storage, and in-memory based on environment
  */
 
 import { config } from '@config/index';
 import { logger } from '@utils/logger';
 import { memoryStore } from './memory-store';
+import { fileStore } from './file-store';
 import { db as postgresDb, UserWallet } from './postgres';
 
 export type { UserWallet };
@@ -16,8 +17,8 @@ const usePostgres = config.database.url && config.database.url.includes('postgre
 if (usePostgres) {
   logger.info('Using PostgreSQL database');
 } else {
-  logger.warn('Using in-memory storage (data will be lost on restart)');
+  logger.info('Using file-based storage (data persists across restarts)');
 }
 
-export const database = usePostgres ? postgresDb : memoryStore;
+export const database = usePostgres ? postgresDb : fileStore;
 
