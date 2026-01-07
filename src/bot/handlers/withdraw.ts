@@ -5,6 +5,7 @@
 import { database } from '@database/index';
 import { decryptPrivateKey } from '@wallet/encryption';
 import { withdrawFromCompound } from '@compound/withdraw';
+import { SEPOLIA_TOKENS } from '@compound/contracts';
 import { isOk } from '@utils/result';
 
 export async function handleWithdraw(from: string, args: string[]): Promise<string> {
@@ -22,11 +23,12 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
   const token = args[1]?.toUpperCase() || '';
 
   if (!amount || !token) {
-    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token]*\nExample: withdraw 50 USDC`;
+    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token]*\nExample: withdraw 0.005 ETH`;
   }
 
-  if (!['USDC'].includes(token)) {
-    return `❌ Token ${token} not supported yet.\n\nSupported tokens: USDC`;
+  const supported = Object.keys(SEPOLIA_TOKENS);
+  if (!supported.includes(token)) {
+    return `❌ Token ${token} not supported.\n\nSupported tokens: ${supported.join(', ')}`;
   }
 
   try {
