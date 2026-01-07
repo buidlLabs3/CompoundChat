@@ -8,6 +8,7 @@ export async function handleHelp(_from: string): Promise<string> {
 Earn interest on your crypto with Compound V3:
 
 🔐 *create wallet* - Create a new wallet
+🛠️ *import wallet [mnemonic]* - Import an existing wallet
 💳 *my wallet* - View your wallet address
 
 💰 *supply [amount] USDC* - Deposit to earn interest (Sepolia Comet USDC)

@@ -13,6 +13,7 @@ import { handleCreateWallet } from './handlers/create-wallet';
 import { handleWalletInfo } from './handlers/wallet';
 import { handleDeposit } from './handlers/deposit';
 import { handleBorrow } from './handlers/borrow';
+import { handleImportWallet } from './handlers/import-wallet';
 
 interface ParsedCommand {
   action: string;
@@ -48,6 +49,8 @@ function parseCommand(message: string): ParsedCommand {
     'create wallet': 'create',
     'new wallet': 'create',
     create: 'create',
+    'import wallet': 'import',
+    import: 'import',
     'my wallet': 'wallet',
     'wallet info': 'wallet',
     wallet: 'wallet',
@@ -83,6 +86,9 @@ export async function handleMessage(
         break;
       case 'create':
         response = await handleCreateWallet(from);
+        break;
+      case 'import':
+        response = await handleImportWallet(from, args);
         break;
       case 'wallet':
         response = await handleWalletInfo(from);
