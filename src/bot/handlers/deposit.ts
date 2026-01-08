@@ -3,7 +3,6 @@
  */
 
 import { database } from '@database/index';
-import { maskAddress } from '@utils/logger';
 import { SEPOLIA_TOKENS } from '@compound/contracts';
 
 const SEPOLIA_CHAIN_ID = 11155111;

@@ -5,7 +5,6 @@
 
 import { config } from '@config/index';
 import { logger } from '@utils/logger';
-import { memoryStore } from './memory-store';
 import { fileStore } from './file-store';
 import { db as postgresDb, UserWallet } from './postgres';
 

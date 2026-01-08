@@ -14,6 +14,8 @@ import { handleWalletInfo } from './handlers/wallet';
 import { handleDeposit } from './handlers/deposit';
 import { handleBorrow } from './handlers/borrow';
 import { handleImportWallet } from './handlers/import-wallet';
+import { handleWithdrawAddress } from './handlers/handle-withdraw-address';
+import { getSession, clearSession } from './session-manager';
 
 interface ParsedCommand {
   action: string;
@@ -36,7 +38,6 @@ function parseCommand(message: string): ParsedCommand {
     bal: 'balance',
     'check balance': 'balance',
     supply: 'supply',
-    deposit: 'supply',
     lend: 'supply',
     withdraw: 'withdraw',
     'take out': 'withdraw',
@@ -70,6 +71,63 @@ export async function handleMessage(
   from: string,
   messageBody: string
 ): Promise<void> {
+  const trimmedMessage = messageBody.trim();
+
+  // Check if user wants to cancel an active session
+  if (trimmedMessage.toLowerCase() === 'cancel') {
+    const session = getSession(from);
+    if (session) {
+      clearSession(from);
+      await sendWhatsAppMessage(from, '❌ Request cancelled.\n\nType *help* to see available commands.');
+      return;
+    }
+  }
+
+  // Check for active sessions first
+  const session = getSession(from);
+  if (session) {
+    logger.info('Active session detected', {
+      from: maskPhoneNumber(from),
+      sessionType: session.type,
+    });
+
+    let response: string;
+
+    try {
+      if (session.type === 'withdraw') {
+        // User is expected to provide an address
+        // Handle special cases: "my wallet" means send to their own wallet
+        if (trimmedMessage.toLowerCase() === 'my wallet') {
+          const wallet = await (await import('@database/index')).database.getWallet(from);
+          if (wallet) {
+            response = await handleWithdrawAddress(from, wallet.address, session);
+          } else {
+            clearSession(from);
+            response = `❌ You don't have a wallet yet.\n\nType *create wallet* to get started.`;
+          }
+        } else {
+          // Treat the message as an address
+          response = await handleWithdrawAddress(from, trimmedMessage, session);
+        }
+        await sendWhatsAppMessage(from, response);
+        return;
+      }
+    } catch (error) {
+      logger.error('Error handling session', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        from: maskPhoneNumber(from),
+      });
+      clearSession(from);
+      await sendWhatsAppMessage(
+        from,
+        'Sorry, something went wrong. Please try again later.'
+      );
+      return;
+    }
+  }
+
+  // No active session, parse as normal command
   const { action, args } = parseCommand(messageBody);
 
   logger.info('Processing command', {

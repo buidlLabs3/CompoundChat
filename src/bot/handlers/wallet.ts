@@ -3,7 +3,6 @@
  */
 
 import { database } from '@database/index';
-import { maskAddress } from '@utils/logger';
 
 export async function handleWalletInfo(from: string): Promise<string> {
   const wallet = await database.getWallet(from);

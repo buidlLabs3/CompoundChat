@@ -14,7 +14,6 @@ export async function handleBorrow(
     return `❌ Invalid format.\n\nUsage: *borrow [amount] [token]*\nExample: borrow 10 USDC`;
   }
 
-  const amount = args[0];
   const token = args[1]?.toUpperCase() || '';
   const supported = Object.keys(SEPOLIA_TOKENS);
 

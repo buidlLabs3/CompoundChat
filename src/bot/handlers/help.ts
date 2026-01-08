@@ -16,7 +16,8 @@ Earn interest on your crypto with Compound V3:
 
 💸 *withdraw [amount] USDC* - Withdraw your funds
    Example: withdraw 5 USDC
-   • Optional: withdraw 5 USDC to 0xabc... (send to external address)
+   • To external wallet: withdraw 5 USDC to
+     (bot will ask for address)
 
 💳 *borrow [amount] USDC* - (Disabled on this Sepolia setup; see note)
 

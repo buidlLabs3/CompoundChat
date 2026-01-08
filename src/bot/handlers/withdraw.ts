@@ -8,8 +8,9 @@ import { decryptPrivateKey } from '@wallet/encryption';
 import { withdrawFromCompound } from '@compound/withdraw';
 import { SEPOLIA_TOKENS, ERC20_ABI } from '@compound/contracts';
 import { isOk } from '@utils/result';
-import { getProvider, getWallet } from '@compound/provider';
+import { getWallet } from '@compound/provider';
 import { CompoundError } from '@utils/errors';
+import { setSession } from '@bot/session-manager';
 
 export async function handleWithdraw(from: string, args: string[]): Promise<string> {
   const wallet = await database.getWallet(from);
@@ -19,14 +20,14 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
   }
 
   if (args.length < 2) {
-    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token] [to <address optional>]*\nExample: withdraw 5 USDC to 0xabc...`;
+    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token]*\nExample: withdraw 5 USDC\n\n💡 You can also send to another wallet:\nwithdraw 5 USDC to 0xabc...`;
   }
 
   const amount = args[0];
   const token = args[1]?.toUpperCase() || '';
 
   if (!amount || !token) {
-    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token] [to <address optional>]*\nExample: withdraw 5 USDC to 0xabc...`;
+    return `❌ Invalid format.\n\nUsage: *withdraw [amount] [token]*\nExample: withdraw 5 USDC`;
   }
 
   const supported = Object.keys(SEPOLIA_TOKENS);
@@ -38,13 +39,28 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
     return `❌ Sepolia USDC market only accepts USDC.\n\nWithdraw base USDC, or swap to ETH after receiving.\nSupported: ${allowedBase.join(', ')}`;
   }
 
+  // Check if "to" keyword exists
+  const toIndex = args.findIndex((a) => a.toLowerCase() === 'to');
+  
+  // If user said "to" but didn't provide address, ask for it
+  if (toIndex >= 0 && !args[toIndex + 1]) {
+    // Create session to wait for address
+    setSession(from, {
+      type: 'withdraw',
+      amount,
+      token,
+      timestamp: Date.now(),
+    });
+
+    return `📤 *External Withdrawal*\n\nYou're withdrawing ${amount} ${token} from Compound.\n\n*Where should I send it?*\n\nReply with:\n• Ethereum address (0x...)\n• Or type *my wallet* to send to your CompoundChat wallet\n\n⏱️ This request expires in 5 minutes.`;
+  }
+
   // Optional external address
   let externalAddress: string | null = null;
-  const toIndex = args.findIndex((a) => a.toLowerCase() === 'to');
   if (toIndex >= 0 && args[toIndex + 1]) {
-    externalAddress = args[toIndex + 1];
-    if (!ethers.isAddress(externalAddress)) {
-      return '❌ Invalid destination address. Provide a valid on-chain address.';
+    externalAddress = args[toIndex + 1] || null;
+    if (externalAddress && !ethers.isAddress(externalAddress)) {
+      return '❌ Invalid destination address. Provide a valid Ethereum address (0x...).';
     }
   }
 
@@ -75,7 +91,6 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
 
     // If external transfer requested, send USDC to target
     if (externalAddress && externalAddress.toLowerCase() !== wallet.address.toLowerCase()) {
-      const provider = getProvider();
       const signer = getWallet(privateKey);
       const tokenAddress = SEPOLIA_TOKENS[token as keyof typeof SEPOLIA_TOKENS];
       const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);

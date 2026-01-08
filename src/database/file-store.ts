@@ -15,7 +15,29 @@ interface WalletStore {
   wallets: Record<string, UserWallet>;
 }
 
-class FileStore {
+export interface DatabaseInterface {
+  getWallet(userId: string): Promise<UserWallet | null>;
+  saveWallet(
+    userId: string,
+    whatsappId: string,
+    walletData: Omit<UserWallet, 'phoneNumber' | 'createdAt'>
+  ): Promise<void>;
+  hasWallet(userId: string): Promise<boolean>;
+  deleteWallet(userId: string): Promise<void>;
+  saveTransaction(
+    userId: string,
+    tx: {
+      txHash: string;
+      type: string;
+      token: string;
+      amount: string;
+      walletAddress: string;
+    }
+  ): Promise<void>;
+  getAllWallets(): Promise<UserWallet[]>;
+}
+
+class FileStore implements DatabaseInterface {
   private wallets: Map<string, UserWallet> = new Map();
   private initialized = false;
 
@@ -70,6 +92,11 @@ class FileStore {
     return this.wallets.get(userId) || null;
   }
 
+  async hasWallet(userId: string): Promise<boolean> {
+    await this.ensureInitialized();
+    return this.wallets.has(userId);
+  }
+
   async saveWallet(
     phoneNumber: string,
     _whatsappId: string,
@@ -118,5 +145,5 @@ class FileStore {
   }
 }
 
-export const fileStore = new FileStore();
+export const fileStore: DatabaseInterface = new FileStore();
 

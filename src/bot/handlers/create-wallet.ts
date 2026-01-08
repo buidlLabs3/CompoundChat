@@ -5,7 +5,6 @@
 import { createWallet } from '@wallet/creation';
 import { database } from '@database/index';
 import { encryptMnemonic } from '@encryption/e2ee';
-import { maskAddress } from '@utils/logger';
 import { isOk } from '@utils/result';
 
 export async function handleCreateWallet(from: string): Promise<string> {
