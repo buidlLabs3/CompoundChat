@@ -11,15 +11,19 @@ Earn interest on your crypto with Compound V3:
 🛠️ *import wallet [mnemonic]* - Import an existing wallet
 💳 *my wallet* - View your wallet address
 
-💰 *supply [amount] USDC* - Deposit to earn interest (Sepolia Comet USDC)
+💰 *supply [amount] USDC* - Deposit to Compound to earn interest
    Example: supply 10 USDC
 
-💸 *withdraw [amount] USDC* - Withdraw your funds
+💸 *withdraw [amount] USDC* - Withdraw from Compound to your wallet
    Example: withdraw 5 USDC
-   • To external wallet: withdraw 5 USDC to
-     (bot will ask for address)
+   • Or: withdraw 5 USDC to (bot asks for address)
 
-💳 *borrow [amount] USDC* - (Disabled on this Sepolia setup; see note)
+📤 *send [amount] [token]* - Send from wallet to external address
+   Example: send 0.01 ETH
+   • Supports: ETH, USDC
+   • Or: send 0.01 ETH to 0xabc...
+
+💳 *borrow [amount] USDC* - (Not available on this Sepolia Comet)
 
 📊 *balance* - Check your wallet & earnings
 

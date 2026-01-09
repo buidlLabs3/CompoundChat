@@ -108,16 +108,16 @@ export async function handleWithdraw(from: string, args: string[]): Promise<stri
       const tx = await (tokenContract as any).transfer(externalAddress, amountWei);
       await tx.wait();
 
-      return `✅ *Withdrawal Successful!*
+      return `✅ *Withdrawal & Transfer Complete!*
 
-💸 Withdrew: ${amount} ${token}
+💸 Withdrew from Compound: ${amount} ${token}
 📤 Sent to: \`${externalAddress}\`
 
-🔗 Transaction:
-• Withdraw: https://sepolia.etherscan.io/tx/${withdrawTxHash}
-• Transfer: https://sepolia.etherscan.io/tx/${tx.hash}
+🔗 Transactions:
+• Compound Withdraw: https://sepolia.etherscan.io/tx/${withdrawTxHash}
+• On-chain Transfer: https://sepolia.etherscan.io/tx/${tx.hash}
 
-Funds sent on-chain to your address.
+Funds successfully sent to external wallet! ✨
 
 Type *balance* to see your updated balance.`;
     }
@@ -125,12 +125,14 @@ Type *balance* to see your updated balance.`;
     // Default: funds stay in wallet
     return `✅ *Withdrawal Successful!*
 
-💸 Withdrew: ${amount} ${token}
+💸 Withdrew from Compound: ${amount} ${token}
+💼 Now in your wallet!
 
 🔗 Transaction:
 https://sepolia.etherscan.io/tx/${withdrawTxHash}
 
-Funds are back in your wallet!
+💡 *Tip:* Use *send* to transfer to external wallets.
+Example: send ${amount} ${token} to 0xabc...
 
 Type *balance* to see your updated balance.`;
   } catch (error: any) {

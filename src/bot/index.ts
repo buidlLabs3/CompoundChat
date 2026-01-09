@@ -15,6 +15,8 @@ import { handleDeposit } from './handlers/deposit';
 import { handleBorrow } from './handlers/borrow';
 import { handleImportWallet } from './handlers/import-wallet';
 import { handleWithdrawAddress } from './handlers/handle-withdraw-address';
+import { handleSend } from './handlers/send';
+import { handleSendAddress } from './handlers/handle-send-address';
 import { getSession, clearSession } from './session-manager';
 
 interface ParsedCommand {
@@ -41,7 +43,8 @@ function parseCommand(message: string): ParsedCommand {
     lend: 'supply',
     withdraw: 'withdraw',
     'take out': 'withdraw',
-    send: 'withdraw',
+    send: 'send',
+    transfer: 'send',
     borrow: 'borrow',
     loan: 'borrow',
     markets: 'markets',
@@ -112,6 +115,13 @@ export async function handleMessage(
         await sendWhatsAppMessage(from, response);
         return;
       }
+
+      if (session.type === 'send') {
+        // User is expected to provide an address for sending tokens
+        response = await handleSendAddress(from, trimmedMessage, session);
+        await sendWhatsAppMessage(from, response);
+        return;
+      }
     } catch (error) {
       logger.error('Error handling session', {
         error: error instanceof Error ? error.message : String(error),
@@ -162,6 +172,9 @@ export async function handleMessage(
         break;
       case 'withdraw':
         response = await handleWithdraw(from, args);
+        break;
+      case 'send':
+        response = await handleSend(from, args);
         break;
       case 'borrow':
         response = await handleBorrow(from, args);

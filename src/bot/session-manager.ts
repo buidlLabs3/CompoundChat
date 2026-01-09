@@ -10,6 +10,13 @@ export interface WithdrawSession {
   timestamp: number;
 }
 
+export interface SendSession {
+  type: 'send';
+  amount: string;
+  token: string;
+  timestamp: number;
+}
+
 export interface PinSession {
   type: 'pin';
   action: 'supply' | 'withdraw' | 'borrow';
@@ -19,7 +26,7 @@ export interface PinSession {
   timestamp: number;
 }
 
-export type Session = WithdrawSession | PinSession;
+export type Session = WithdrawSession | SendSession | PinSession;
 
 // In-memory session storage (expires after 5 minutes)
 const sessions = new Map<string, Session>();
