@@ -7,6 +7,10 @@
 [![Node](https://img.shields.io/badge/Node-20+-green)](https://nodejs.org/)
 [![Ethereum](https://img.shields.io/badge/Ethereum-Mainnet-purple)](https://ethereum.org/)
 
+## 🎥 Demo Video
+
+**[▶️ Watch the Full Demo](https://drive.google.com/file/d/1M0bsyLfyE6B0muvxrMk8Pk0y1BTS7vV6/view?usp=sharing)** - See CompoundChat in action with wallet creation, supply, withdraw, and send functionalities on WhatsApp.
+
 ## 🎯 Mission
 
 CompoundChat makes DeFi accessible to anyone with a phone and WhatsApp. No app downloads, no browser extensions, no complex UIs — just simple text commands to earn interest on crypto savings.
